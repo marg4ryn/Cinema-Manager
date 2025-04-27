@@ -1,9 +1,6 @@
 const app = require('./app');
-const { startListening } = require('./infrastructure/eventReceiver');
+const PORT = process.env.PORT || 3000;
 
-const port = 3000;
-
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-  startListening();
+app.listen(PORT, () => {
+  console.log(`Reservation Service running on port ${PORT}`);
 });
