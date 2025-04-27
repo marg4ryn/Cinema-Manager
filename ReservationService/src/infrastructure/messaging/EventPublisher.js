@@ -1,4 +1,5 @@
 const amqp = require('amqplib');
+const logger = require('../logging/logger');
 
 class EventPublisher {
   static async publish(eventType, payload) {
@@ -15,14 +16,14 @@ class EventPublisher {
       });
 
       channel.publish(exchange, '', Buffer.from(message));
-      console.log(`[x] Event published: ${message}`);
+      logger.info(`[x] Event published: ${message}`);
 
       setTimeout(() => {
         connection.close();
       }, 500);
       
     } catch (error) {
-      console.error('Failed to publish event', error);
+       logger.error('Failed to publish event', error);
     }
   }
 }

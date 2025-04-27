@@ -1,4 +1,5 @@
 const amqp = require('amqplib');
+const logger = require('../logging/logger');
 
 async function startSubscriber() {
   const connection = await amqp.connect('amqp://localhost');
@@ -8,14 +9,14 @@ async function startSubscriber() {
   await channel.assertExchange(exchange, 'fanout', { durable: false });
 
   const q = await channel.assertQueue('', { exclusive: true });
-  console.log(`[*] Waiting for events in queue: ${q.queue}`);
+  logger.info(`[*] Waiting for events in queue: ${q.queue}`);
   
   channel.bindQueue(q.queue, exchange, '');
 
   channel.consume(q.queue, (msg) => {
     if (msg.content) {
       const event = JSON.parse(msg.content.toString());
-      console.log(`[>] Event received: ${event.type}`, event.payload);
+      logger.info(`[>] Event received: ${event.type}`, event.payload);
     }
   }, {
     noAck: true
