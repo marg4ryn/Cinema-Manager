@@ -12,3 +12,5 @@ Body:
   "movieId": "456",
   "seats": ["A1", "A2"]
 }
+
+docker-compose up -d
