@@ -1,21 +1,21 @@
 const EventPublisher = require('./EventPublisher');
-const EventSubscriber = require('./EventSubscriber');
-const GetMovieSessionsHandler = require('../../application/queries/GetMovieSessionsHandler');
-const { MOVIE_SESSION_REQUESTED, MOVIE_SESSION_RESPONSE } = require('../../domain/events/MovieEvents');
-const logger = require('../logger/logger');
+const EventListener = require('./EventListener');
+const MovieQueryHandler = require('../../application/MovieQueryHandler');
+const { MOVIE_SESSION_REQUEST, MOVIE_SESSION_RESPONSE } = require('../../domain/MovieEvents');
+const logger = require('../logging/logger');
 
 async function setupMovieEvents(rabbitUrl) {
     const publisher = new EventPublisher(rabbitUrl, MOVIE_SESSION_RESPONSE);
     await publisher.connect();
 
-    const subscriber = new EventSubscriber(rabbitUrl, MOVIE_SESSION_REQUESTED);
+    const subscriber = new EventListener(rabbitUrl, MOVIE_SESSION_REQUEST);
     await subscriber.connect();
 
     try {
         await subscriber.subscribe(async (event) => {
         logger.info(`Received event: ${event.eventName}`);
 
-        const sessions = await GetMovieSessionsHandler.handle(event.payload);
+        const sessions = await MovieQueryHandler.handle(event.payload);
 
         await publisher.publish({
             eventName: MOVIE_SESSION_RESPONSE,

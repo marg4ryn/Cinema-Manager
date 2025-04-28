@@ -1,27 +1,52 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const { setupTicketEvents } = require('./infrastructure/events/TicketEventHandler');
-const logger = require('./infrastructure/logger/logger');
+const EventPublisher = require('./infrastructure/messaging/EventPublisher');
+const EventListener = require('./infrastructure/messaging/EventListener');
+const logger = require('./infrastructure/logging/logger');
+const amqp = require('amqplib');
+const { RABBITMQ_URL } = process.env; // Ustawienie URL RabbitMQ w zmiennych środowiskowych
 
+// Tworzymy instancję aplikacji Express
 const app = express();
-app.use(express.json());
 
-const start = async () => {
+// Funkcja uruchamiająca połączenie z RabbitMQ
+async function connectToRabbitMQ() {
     try {
-        await mongoose.connect('mongodb://localhost:27017/ticketservice');
-        console.log('Connected to MongoDB');
-
-        await setupTicketEvents('amqp://localhost');
-
-        app.listen(3001, () => {
-            console.log('TicketService running on port 3001');
-            logger.info('TicketService started successfully.');
-        });
+        const connection = await amqp.connect(RABBITMQ_URL);
+        const channel = await connection.createChannel();
+        return { connection, channel };
     } catch (error) {
-        console.error(error);
-        logger.error(error.message);
-        process.exit(1);
+        logger.error('Failed to connect to RabbitMQ:', error);
+        process.exit(1); // Przerwij aplikację, jeśli połączenie z RabbitMQ nie uda się nawiązać
     }
-};
+}
 
-start();
+// Główna funkcja do uruchomienia serwisu
+async function startApp() {
+    const { connection, channel } = await connectToRabbitMQ();
+    
+    // Inicjalizujemy Publisher
+    const publisher = new EventPublisher(channel);
+
+    // Tworzymy i uruchamiamy EventListener, który będzie nasłuchiwał na eventy
+    const eventListener = new EventListener(publisher);
+    await eventListener.listen(); // Nasłuchujemy na eventy
+
+    // Połączmy aplikację Express z RabbitMQ
+    app.listen(3000, () => {
+        logger.info('Server is running on port 3000');
+    });
+
+    // Obsługuje zamknięcie aplikacji (np. przez SIGINT, SIGTERM)
+    process.on('SIGINT', async () => {
+        logger.info('Closing application...');
+        await channel.close();
+        await connection.close();
+        process.exit(0);
+    });
+}
+
+// Uruchomienie aplikacji
+startApp().catch(error => {
+    logger.error('Error starting the application:', error);
+    process.exit(1);
+});

@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { setupMovieEvents } = require('./infrastructure/events/MovieEventHandler');
-const logger = require('./infrastructure/logger/logger');
+const logger = require('./infrastructure/logging/logger');
 
 const app = express();
 app.use(express.json());
