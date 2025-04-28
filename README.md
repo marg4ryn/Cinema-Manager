@@ -14,3 +14,13 @@ Body:
 }
 
 docker-compose up -d
+
+docker-compose up eventsender
+
+docker-compose down
+
+docker ps -a
+
+docker-compose up rabbitmq
+
+npm install express winston amqplib uuid

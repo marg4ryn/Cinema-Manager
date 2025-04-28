@@ -3,9 +3,9 @@ const EventPublisher = require('./infrastructure/messaging/EventPublisher');
 const EventListener = require('./infrastructure/messaging/EventListener');
 const logger = require('./infrastructure/logging/logger');
 const amqp = require('amqplib');
-const { RABBITMQ_URL } = process.env; // Ustawienie URL RabbitMQ w zmiennych środowiskowych
+const RABBITMQ_URL = 'amqp://myuser:mypassword@host.docker.internal:5672/';
 
-// Tworzymy instancję aplikacji Express
+// Tworzymy instancję aplikacji Express inst
 const app = express();
 
 // Funkcja uruchamiająca połączenie z RabbitMQ
@@ -13,6 +13,7 @@ async function connectToRabbitMQ() {
     try {
         const connection = await amqp.connect(RABBITMQ_URL);
         const channel = await connection.createChannel();
+        logger.info('Connected to RabbitMQ successfully');
         return { connection, channel };
     } catch (error) {
         logger.error('Failed to connect to RabbitMQ:', error);
@@ -23,13 +24,13 @@ async function connectToRabbitMQ() {
 // Główna funkcja do uruchomienia serwisu
 async function startApp() {
     const { connection, channel } = await connectToRabbitMQ();
-    
-    // Inicjalizujemy Publisher
+
+    // Inicjalizacja publishera
     const publisher = new EventPublisher(channel);
 
-    // Tworzymy i uruchamiamy EventListener, który będzie nasłuchiwał na eventy
-    const eventListener = new EventListener(publisher);
-    await eventListener.listen(); // Nasłuchujemy na eventy
+    // Inicjalizacja listenera
+    const eventListener = new EventListener(channel, publisher);
+    await eventListener.listen();
 
     // Połączmy aplikację Express z RabbitMQ
     app.listen(3000, () => {

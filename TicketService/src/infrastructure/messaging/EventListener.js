@@ -3,13 +3,23 @@ const { GENERATE_TICKET, SEND_TICKET } = require('../../domain/TicketEvents');
 const TicketCommandHandler = require('../../application/TicketCommandHandler');
 
 class EventListener {
-    constructor(publisher) {
+    constructor(channel, publisher) {
+        this.channel = channel;
         this.publisher = publisher;
         this.ticketCommandHandler = new TicketCommandHandler();
     }
 
     async listen() {
-        await this.publisher.subscribe(GENERATE_TICKET, this.handleGenerateTicketEvent.bind(this));
+        const queue = GENERATE_TICKET;
+        await this.channel.assertQueue(queue, { durable: true });
+
+        this.channel.consume(queue, async (msg) => {
+            if (msg !== null) {
+                const event = JSON.parse(msg.content.toString());
+                await this.handleGenerateTicketEvent(event);
+                this.channel.ack(msg);
+            }
+        });
     }
 
     async handleGenerateTicketEvent(event) {
@@ -24,5 +34,6 @@ class EventListener {
         });
     }
 }
+
 
 module.exports = EventListener;

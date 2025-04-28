@@ -1,5 +1,5 @@
 {
-  "name": "ticketservice",
+  "name": "eventsender",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -11,9 +11,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "amqplib": "^0.10.7",
-    "express": "^5.1.0",
-    "uuid": "^11.1.0",
-    "winston": "^3.17.0"
+    "amqplib": "^0.10.7"
   }
 }
