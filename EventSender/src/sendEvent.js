@@ -5,8 +5,13 @@ async function sendEventToRabbitMQ(event) {
     try {
         console.log('Connecting to RabbitMQ...');
         const connection = await amqp.connect(RABBITMQ_URL);
-        const channel = await connection.createChannel();
         
+        if (!connection) {
+            throw new Error('Unable to establish a connection');
+        }
+
+        const channel = await connection.createChannel();
+
         const queue = event.eventName;
 
         console.log(`Asserting queue: ${queue}`);
@@ -21,11 +26,12 @@ async function sendEventToRabbitMQ(event) {
         await connection.close();
     } catch (error) {
         console.error('Error sending event:', error);
+        console.error('Error stack:', error.stack);
     }
 }
 
 const exampleEvent = {
-    eventName: 'GENERATE_TICKET'
+    eventName: 'GenerateTicket'
 };
 
 sendEventToRabbitMQ(exampleEvent);

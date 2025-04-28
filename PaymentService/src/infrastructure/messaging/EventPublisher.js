@@ -1,4 +1,4 @@
-// src/infrastructure/Publisher.js
+const logger = require('../logging/logger');
 const amqp = require('amqplib');
 
 class EventPublisher {
@@ -17,18 +17,7 @@ class EventPublisher {
         const queue = event.eventName;
         await this.channel.assertQueue(queue, { durable: true });
         this.channel.sendToQueue(queue, Buffer.from(JSON.stringify(event)));
-        console.log(`Event published: ${event.eventName}`);
-    }
-
-    async subscribe(eventName, handler) {
-        await this.channel.assertQueue(eventName, { durable: true });
-        this.channel.consume(eventName, async (msg) => {
-            if (msg !== null) {
-                const event = JSON.parse(msg.content.toString());
-                await handler(event);
-                this.channel.ack(msg);
-            }
-        });
+        logger.info(`Event published: ${event.eventName}`);
     }
 
     async close() {

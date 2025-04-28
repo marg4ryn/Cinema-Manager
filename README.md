@@ -24,3 +24,8 @@ docker ps -a
 docker-compose up rabbitmq
 
 npm install express winston amqplib uuid
+
+eventName: 'CancelReservation',
+payload: {
+    reservationId: '12345'
+}

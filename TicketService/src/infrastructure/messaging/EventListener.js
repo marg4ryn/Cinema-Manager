@@ -12,6 +12,7 @@ class EventListener {
     async listen() {
         const queue = GENERATE_TICKET;
         await this.channel.assertQueue(queue, { durable: true });
+        logger.info(`Listening for events on queue: ${queue}`);
 
         this.channel.consume(queue, async (msg) => {
             if (msg !== null) {
@@ -34,6 +35,5 @@ class EventListener {
         });
     }
 }
-
 
 module.exports = EventListener;
