@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const reservationRoutes = require('./api/routes/reservationRoutes');
-const logger = require('./infrastructure/logger/logger');
+const logger = require('./infrastructure/logging/logger');
 
 const app = express();
 
