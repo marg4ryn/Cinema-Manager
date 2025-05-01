@@ -3,8 +3,8 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"   # Port AMQP
-      - "15672:15672" # Port dla panelu WWW
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -22,7 +22,7 @@ services:
     ports:
       - "3001:3001"
 
-  serwis:
+  ticketservice:
     build:
       context: ./TicketService
     container_name: ticketService
@@ -31,4 +31,15 @@ services:
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     ports:
-      - "3002:3002"
+      - "3004:3004"
+
+  notificationservice:
+    build:
+      context: ./NotificationService
+    container_name: notificationService
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "3005:3005"

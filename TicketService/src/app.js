@@ -1,9 +1,11 @@
 const express = require('express');
+const amqp = require('amqplib');
 const EventPublisher = require('./infrastructure/messaging/EventPublisher');
 const EventListener = require('./infrastructure/messaging/EventListener');
+const GenerateTicketHandler = require('./domain/handlers/GenerateTicketHandler');
+const TICKET_EVENTS = require('./domain/events/TicketEvents');
 const logger = require('./infrastructure/logging/logger');
-const amqp = require('amqplib');
-const RABBITMQ_URL = 'amqp://guest:guest@localhost:5672';
+const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://guest:guest@rabbitmq:5672';
 
 const app = express();
 
@@ -22,14 +24,17 @@ async function connectToRabbitMQ() {
 async function startApp() {
     const { connection, channel } = await connectToRabbitMQ();
 
-    const publisher = new EventPublisher(channel);
-    await publisher.connect();
-    
-    const eventListener = new EventListener(channel, publisher);
-    await eventListener.listen();
+    const publisher = new EventPublisher(channel, TICKET_EVENTS.TICKET_GENERATED);
 
-    app.listen(3000, () => {
-        logger.info('Server is running on port 3000');
+    const handlerMap = {
+        [TICKET_EVENTS.TICKET_REQUESTED]: new GenerateTicketHandler(publisher, logger),
+    };
+
+    const eventListener = new EventListener(channel, handlerMap, logger);
+    await eventListener.startListening(TICKET_EVENTS.TICKET_REQUESTED);
+
+    app.listen(3004, () => {
+        logger.info('TicketService is running on port 3004');
     });
 
     process.on('SIGINT', async () => {

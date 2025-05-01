@@ -1,47 +1,29 @@
-const logger = require('../logging/logger');
-const { CANCEL_RESERVATION, SEND_TICKET } = require('../../domain/NotificationEvents');
-const NotificationCommandHandler = require('../../application/NotificationCommandHandler');
-
 class EventListener {
-    constructor(channel) {
+    constructor(channel, handlerMap, logger) {
         this.channel = channel;
-        this.notificationCommandHandler = new NotificationCommandHandler();
+        this.handlerMap = handlerMap;
+        this.logger = logger;
     }
 
-    async listen() {
-        const cancelReservationQueue = CANCEL_RESERVATION;
-        await this.channel.assertQueue(cancelReservationQueue, { durable: true });
-        logger.info(`Listening for events on queue: ${cancelReservationQueue}`);
+    async startListening(queueName) {
+        this.logger.info(`Listening on channel: ${queueName}`);
+        await this.channel.assertQueue(queueName);
 
-        this.channel.consume(cancelReservationQueue, async (msg) => {
+        this.channel.consume(queueName, async (msg) => {
             if (msg !== null) {
                 const event = JSON.parse(msg.content.toString());
-                await this.handleCancelReservationEvent(event);
+                this.logger.info(`Received event: ${event.eventName}`);
+
+                const handler = this.handlerMap[event.eventName];
+                if (handler) {
+                    await handler.handle(event);
+                } else {
+                    this.logger.warn(`No handler for event: ${event.eventName}`);
+                }
+
                 this.channel.ack(msg);
             }
         });
-
-        const sendTicketQueue = SEND_TICKET;
-        await this.channel.assertQueue(sendTicketQueue, { durable: true });
-        logger.info(`Listening for events on queue: ${sendTicketQueue}`);
-
-        this.channel.consume(sendTicketQueue, async (msg) => {
-            if (msg !== null) {
-                const event = JSON.parse(msg.content.toString());
-                await this.handleSendTicketEvent(event);
-                this.channel.ack(msg);
-            }
-        });
-    }
-
-    async handleCancelReservationEvent(event) {
-        logger.info(`Received event: ${event.eventName}`);
-        await this.notificationCommandHandler.handleCancelReservation(event);
-    }
-
-    async handleSendTicketEvent(event) {
-        logger.info(`Received event: ${event.eventName}`);
-        await this.notificationCommandHandler.handleSendTicket(event);
     }
 }
 

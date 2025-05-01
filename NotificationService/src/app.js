@@ -1,8 +1,10 @@
+const amqp = require('amqplib');
 const express = require('express');
 const EventListener = require('./infrastructure/messaging/EventListener');
+const NotificationCommandHandler = require('./domain/handlers/NotificationCommandHandler');
 const logger = require('./infrastructure/logging/logger');
-const amqp = require('amqplib');
-const RABBITMQ_URL = 'amqp://guest:guest@localhost:5672';
+const NOTIFICATION_EVENTS = require('./domain/events/NotificationEvents');
+const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://guest:guest@rabbitmq:5672';
 
 const app = express();
 
@@ -20,16 +22,24 @@ async function connectToRabbitMQ() {
 
 async function startApp() {
     const { connection, channel } = await connectToRabbitMQ();
-    
-    const eventListener = new EventListener(channel);
-    await eventListener.listen();
 
-    app.listen(3000, () => {
-        logger.info('Server is running on port 3000');
+    const notificationHandler = new NotificationCommandHandler();
+
+    const handlerMap = {
+        [NOTIFICATION_EVENTS.PAYMENT_FAILED]: notificationHandler,
+        [NOTIFICATION_EVENTS.TICKET_GENERATED]: notificationHandler
+    };
+
+    const eventListener = new EventListener(channel, handlerMap, logger);
+    await eventListener.startListening(NOTIFICATION_EVENTS.PAYMENT_FAILED);
+    await eventListener.startListening(NOTIFICATION_EVENTS.TICKET_GENERATED);
+    
+    app.listen(3005, () => {
+        logger.info('NotificationService is running on port 3005');
     });
 
     process.on('SIGINT', async () => {
-        logger.info('Closing application...');
+        logger.info('Closing NotificationService...');
         await channel.close();
         await connection.close();
         process.exit(0);
@@ -37,6 +47,6 @@ async function startApp() {
 }
 
 startApp().catch(error => {
-    logger.error('Error starting the application:', error);
+    logger.error('Error starting NotificationService:', error);
     process.exit(1);
 });

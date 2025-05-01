@@ -1,36 +1,28 @@
-const logger = require('../logging/logger');
-const { GENERATE_TICKET, SEND_TICKET } = require('../../domain/TicketEvents');
-const TicketCommandHandler = require('../../application/TicketCommandHandler');
+const TICKET_EVENTS = require('../../domain/events/TicketEvents');
 
 class EventListener {
-    constructor(channel, publisher) {
+    constructor(channel, handlerMap, logger) {
         this.channel = channel;
-        this.publisher = publisher;
-        this.ticketCommandHandler = new TicketCommandHandler();
+        this.handlerMap = handlerMap;
+        this.logger = logger;
     }
 
-    async listen() {
-        const queue = GENERATE_TICKET;
-        await this.channel.assertQueue(queue, { durable: true });
-        logger.info(`Listening for events on queue: ${queue}`);
+    async startListening(queueName) {
+        await this.channel.assertQueue(queueName);
 
-        this.channel.consume(queue, async (msg) => {
+        this.channel.consume(queueName, async (msg) => {
             if (msg !== null) {
                 const event = JSON.parse(msg.content.toString());
-                await this.handleGenerateTicketEvent(event);
+                this.logger.info(`Received event: ${event.eventName}`);
+
+                const handler = this.handlerMap[event.eventName];
+                if (handler) {
+                    await handler.handle(event);
+                } else {
+                    this.logger.warn(`No handler for event: ${event.eventName}`);
+                }
+
                 this.channel.ack(msg);
-            }
-        });
-    }
-
-    async handleGenerateTicketEvent(event) {
-        logger.info(`Received event: ${event.eventName}`);
-        const ticketNumber = this.ticketCommandHandler.generate();
-
-        await this.publisher.publish({
-            eventName: SEND_TICKET,
-            payload: {
-                ticketNumber
             }
         });
     }

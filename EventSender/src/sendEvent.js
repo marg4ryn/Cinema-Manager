@@ -1,5 +1,5 @@
 const amqp = require('amqplib');
-const RABBITMQ_URL = 'amqp://guest:guest@localhost:5672';
+const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://guest:guest@rabbitmq:5672';
 
 async function sendEventToRabbitMQ(event) {
     try {
@@ -30,8 +30,21 @@ async function sendEventToRabbitMQ(event) {
     }
 }
 
-const exampleEvent = {
-    eventName: 'GenerateTicket'
+const ticketRequestedEvent = {
+    eventName: 'TicketRequested',
+    payload: {
+        reservationId: '12345',
+        userEmail: 'john.doe@gmail.com'
+    }
 };
 
-sendEventToRabbitMQ(exampleEvent);
+const paymentFailedEvent = {
+    eventName: 'PaymentFailed',
+    payload: {
+        reservationId: '12346',
+        userEmail: 'john.doe2@gmail.com'
+    }
+};
+
+sendEventToRabbitMQ(ticketRequestedEvent);
+sendEventToRabbitMQ(paymentFailedEvent);
