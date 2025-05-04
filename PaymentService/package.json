@@ -12,6 +12,7 @@
   "type": "commonjs",
   "dependencies": {
     "amqplib": "^0.10.7",
+    "axios": "^1.9.0",
     "moongose": "^1.0.0",
     "winston": "^3.17.0"
   }

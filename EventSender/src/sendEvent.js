@@ -46,5 +46,12 @@ const paymentFailedEvent = {
     }
 };
 
-sendEventToRabbitMQ(ticketRequestedEvent);
-sendEventToRabbitMQ(paymentFailedEvent);
+const paymentRequested = {
+    eventName: 'PaymentRequested',
+    payload: {
+        reservationId: '12346',
+        userEmail: 'john.doe2@gmail.com'
+    }
+};
+
+sendEventToRabbitMQ(paymentRequested);

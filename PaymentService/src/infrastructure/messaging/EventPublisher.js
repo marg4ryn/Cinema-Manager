@@ -2,15 +2,8 @@ const logger = require('../logging/logger');
 const amqp = require('amqplib');
 
 class EventPublisher {
-    constructor(rabbitUrl) {
-        this.rabbitUrl = rabbitUrl;
-        this.connection = null;
-        this.channel = null;
-    }
-
-    async connect() {
-        this.connection = await amqp.connect(this.rabbitUrl);
-        this.channel = await this.connection.createChannel();
+    constructor(channel) {
+        this.channel = channel;
     }
 
     async publish(event) {

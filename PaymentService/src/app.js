@@ -1,11 +1,35 @@
 const express = require('express');
+const axios = require('axios');
+const amqp = require('amqplib');
 const EventPublisher = require('./infrastructure/messaging/EventPublisher');
 const EventListener = require('./infrastructure/messaging/EventListener');
+const PaymentCommandHandler = require('./domain/handlers/PaymentCommandHandler');
 const logger = require('./infrastructure/logging/logger');
-const amqp = require('amqplib');
-const RABBITMQ_URL = 'amqp://guest:guest@localhost:5672';
+const PAYMENT_EVENTS = require('./domain/events/PaymentEvents');
+const paymentResponseRoutes = require('./api/payment-routes');
+
+const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://guest:guest@rabbitmq:5672';
+const PORT = process.env.PORT || 3002;
 
 const app = express();
+app.use(express.json());
+
+app.use('/', paymentResponseRoutes);
+
+const paymentService = {
+    async getUserResponse(reservationId) {
+        const url = `http://localhost:${PORT}/payment-response/${reservationId}`;
+        try {
+            const response = await axios.get(url, { timeout: 30000 });
+            if (response.data.status === 'yes') return 'approved';
+            if (response.data.status === 'no') return 'declined';
+            return null;
+        } catch (error) {
+            //logger.error(`Payment error for reservation ID: ${reservationId}`);
+            return null;
+        }
+    }
+};
 
 async function connectToRabbitMQ() {
     try {
@@ -23,17 +47,17 @@ async function startApp() {
     const { connection, channel } = await connectToRabbitMQ();
 
     const publisher = new EventPublisher(channel);
-    await publisher.connect();
-    
-    const eventListener = new EventListener(channel, publisher);
-    await eventListener.listen();
+    const handler = new PaymentCommandHandler(publisher, paymentService, logger);
+    const eventListener = new EventListener(channel, handler, logger);
 
-    app.listen(3000, () => {
-        logger.info('Server is running on port 3000');
+    await eventListener.startListening(PAYMENT_EVENTS.PAYMENT_REQUESTED);
+
+    app.listen(PORT, () => {
+        logger.info(`Server is running on port ${PORT}`);
     });
 
     process.on('SIGINT', async () => {
-        logger.info('Closing application...');
+        logger.info('Shutting down...');
         await channel.close();
         await connection.close();
         process.exit(0);
