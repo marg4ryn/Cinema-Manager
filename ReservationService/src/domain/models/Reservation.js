@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const reservationSchema = new mongoose.Schema({
-  userId: String,
-  movieId: String,
-  seats: [String],
+  sessionId: ObjectId,
+  userEmail: String,
+  seats: [Number],
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -1,20 +1,22 @@
-# Wybieramy bazowy obraz Node.js
 FROM node:16
 
-# Tworzymy katalog roboczy w kontenerze
 WORKDIR /app
 
-# Kopiujemy pliki package.json i package-lock.json
-COPY package*.json ./
+# Kopiujemy package.json z NotificationService (TYLKO ten, nie shared!)
+COPY NotificationService/package*.json ./
 
 # Instalujemy zależności
 RUN npm install
 
-# Kopiujemy resztę plików źródłowych
-COPY . .
+# Kopiujemy kod NotificationService
+COPY NotificationService/ ./
 
-# Ustawiamy zmienną środowiskową dla portu
-ENV PORT=3002
+# Kopiujemy katalog shared (WAŻNE: z odpowiednią ścieżką!)
+COPY shared ./shared
 
-# Uruchamiamy aplikację
+# Rejestracja aliasów (upewnij się, że module-alias jest zainstalowany)
+RUN npm install module-alias
+
+ENV PORT=3005
+
 CMD ["node", "src/app.js"]

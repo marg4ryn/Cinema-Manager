@@ -1,26 +1,20 @@
+const RESERVATION_EVENTS = require('../../domain/events/ReservationEvents');
+
 class EventListener {
-    constructor(channel, handlerMap, logger) {
+    constructor(channel, handler, logger) {
         this.channel = channel;
-        this.handlerMap = handlerMap;
+        this.handler = handler;
         this.logger = logger;
     }
 
     async startListening(queueName) {
-        this.logger.info(`Listening on channel: ${queueName}`);
         await this.channel.assertQueue(queueName);
 
         this.channel.consume(queueName, async (msg) => {
             if (msg !== null) {
                 const event = JSON.parse(msg.content.toString());
                 this.logger.info(`Received event: ${event.eventName}`);
-
-                const handler = this.handlerMap[event.eventName];
-                if (handler) {
-                    await handler.handle(event);
-                } else {
-                    this.logger.warn(`No handler for event: ${event.eventName}`);
-                }
-
+                await this.handler.handle(event);
                 this.channel.ack(msg);
             }
         });

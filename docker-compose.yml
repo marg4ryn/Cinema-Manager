@@ -8,10 +8,24 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
-      RABBITMQ_DEFAULT_VHOST: /
-      RABBITMQ_LOOPBACK_USERS: none
 
-  eventsender:
+  # mongo-movie:
+  #   image: mongo:6
+  #   container_name: mongo_movie
+  #   ports:
+  #     - "27018:27017"
+  #   volumes:
+  #     - mongo_movie_data:/data/db
+
+  # mongo-reservation:
+  #   image: mongo:6
+  #   container_name: mongo_reservation
+  #   ports:
+  #     - "27019:27017"
+  #   volumes:
+  #     - mongo_reservation_data:/data/db
+
+  event-sender:
     build:
       context: ./EventSender
     container_name: eventsender
@@ -20,33 +34,56 @@ services:
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     ports:
-      - "3001:3001"
+      - "3000:3000"
 
-  paymentservice:
-    build:
-      context: ./PaymentService
-    container_name: paymentService
-    depends_on:
-      - rabbitmq
-    environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-    ports:
-      - "3003:3003"
+  # reservation-service:
+  #   build:
+  #     context: ./ReservationService
+  #   container_name: reservationservice
+  #   depends_on:
+  #     - rabbitmq
+  #   environment:
+  #     RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+  #   ports:
+  #     - "3001:3001"
 
-  ticketservice:
-    build:
-      context: ./TicketService
-    container_name: ticketService
-    depends_on:
-      - rabbitmq
-    environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-    ports:
-      - "3004:3004"
+  # movie-service:
+  #   build:
+  #     context: ./MovieService
+  #   container_name: movieservice
+  #   depends_on:
+  #     - rabbitmq
+  #   environment:
+  #     RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+  #   ports:
+  #     - "3002:3002"
 
-  notificationservice:
+  # payment-service:
+  #   build:
+  #     context: ./PaymentService
+  #   container_name: paymentService
+  #   depends_on:
+  #     - rabbitmq
+  #   environment:
+  #     RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+  #   ports:
+  #     - "3003:3003"
+
+  # ticket-service:
+  #   build:
+  #     context: ./TicketService
+  #   container_name: ticketService
+  #   depends_on:
+  #     - rabbitmq
+  #   environment:
+  #     RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+  #   ports:
+  #     - "3004:3004"
+
+  notification-service:
     build:
-      context: ./NotificationService
+      context: .
+      dockerfile: NotificationService/Dockerfile
     container_name: notificationService
     depends_on:
       - rabbitmq
@@ -54,3 +91,7 @@ services:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     ports:
       - "3005:3005"
+
+# volumes:
+#   mongo_movie_data:
+#   mongo_reservation_data:

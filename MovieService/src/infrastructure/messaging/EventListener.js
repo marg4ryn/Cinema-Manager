@@ -1,33 +1,24 @@
-const logger = require('../logging/logger');
-const MovieQueryHandler = require('../../application/MovieQueryHandler');
-const { MOVIE_SESSION_REQUEST, MOVIE_SESSION_RESPONSE } = require('../../domain/MovieEvents');
+const MOVIE_EVENTS = require('../../domain/events/MovieEvents');
 
-class MovieEventListener {
-    constructor(publisher) {
-        this.publisher = publisher;
-        this.movieQueryHandler = new MovieQueryHandler();
+class EventListener {
+    constructor(channel, handler, logger) {
+        this.channel = channel;
+        this.handler = handler;
+        this.logger = logger;
     }
 
-    async listen() {
-        // Subskrybujemy zdarzenie MOVIE_SESSION_REQUEST
-        await this.publisher.subscribe(MOVIE_SESSION_REQUEST, this.handleMovieSessionRequest.bind(this));
-    }
+    async startListening(queueName) {
+        await this.channel.assertQueue(queueName);
 
-    async handleMovieSessionRequest(event) {
-        logger.info(`Received event: ${event.eventName}`);
-        try {
-            // Obsługujemy zapytanie o dane sesji filmu
-            const movieSession = await this.movieQueryHandler.handle(event.payload.movieTitle);
-
-            // Wysłanie odpowiedzi jako MOVIE_SESSION_RESPONSE
-            await this.publisher.publish({
-                eventName: MOVIE_SESSION_RESPONSE,
-                payload: movieSession
-            });
-        } catch (error) {
-            logger.error(`Error handling movie session request: ${error.message}`);
-        }
+        this.channel.consume(queueName, async (msg) => {
+            if (msg !== null) {
+                const event = JSON.parse(msg.content.toString());
+                this.logger.info(`Received event: ${event.eventName}`);
+                await this.handler.handle(event);
+                this.channel.ack(msg);
+            }
+        });
     }
 }
 
-module.exports = MovieEventListener;
+module.exports = EventListener;

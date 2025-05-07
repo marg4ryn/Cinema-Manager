@@ -1,10 +1,10 @@
-const amqp = require('amqplib');
+require('module-alias/register');
 const express = require('express');
-const EventListener = require('./infrastructure/messaging/EventListener');
-const NotificationCommandHandler = require('./domain/handlers/NotificationCommandHandler');
-const logger = require('./infrastructure/logging/logger');
-const NOTIFICATION_EVENTS = require('./domain/events/NotificationEvents');
-const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://guest:guest@rabbitmq:5672';
+const amqp = require('amqplib');
+const PaymentFailedListener = require('./infrastructure/PaymentFailedListener');
+const TicketGeneratedListener = require('./infrastructure/TicketGeneratedListener');
+const logger = require('@shared/logger/logger');
+const RABBITMQ_URL = 'amqp://guest:guest@rabbitmq:5672';
 
 const app = express();
 
@@ -23,16 +23,10 @@ async function connectToRabbitMQ() {
 async function startApp() {
     const { connection, channel } = await connectToRabbitMQ();
 
-    const notificationHandler = new NotificationCommandHandler();
-
-    const handlerMap = {
-        [NOTIFICATION_EVENTS.PAYMENT_FAILED]: notificationHandler,
-        [NOTIFICATION_EVENTS.TICKET_GENERATED]: notificationHandler
-    };
-
-    const eventListener = new EventListener(channel, handlerMap, logger);
-    await eventListener.startListening(NOTIFICATION_EVENTS.PAYMENT_FAILED);
-    await eventListener.startListening(NOTIFICATION_EVENTS.TICKET_GENERATED);
+    const paymentFailedListener = new PaymentFailedListener(channel);
+    const ticketGeneratedListener = new TicketGeneratedListener(channel);
+    await paymentFailedListener.listen();
+    await ticketGeneratedListener.listen();
     
     app.listen(3005, () => {
         logger.info('NotificationService is running on port 3005');

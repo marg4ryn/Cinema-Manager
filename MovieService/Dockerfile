@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Ustawiamy zmienną środowiskową dla portu
-ENV PORT=3000
+ENV PORT=3002
 
 # Uruchamiamy aplikację
-CMD ["node", "src/sendEvent.js"]
+CMD ["node", "src/app.js"]
