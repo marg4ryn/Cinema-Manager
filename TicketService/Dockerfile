@@ -5,16 +5,18 @@ FROM node:16
 WORKDIR /app
 
 # Kopiujemy pliki package.json i package-lock.json
-COPY package*.json ./
+COPY TicketService/package*.json ./
 
 # Instalujemy zależności
 RUN npm install
 
 # Kopiujemy resztę plików źródłowych
-COPY . .
+COPY TicketService/ ./
+
+COPY shared ./shared
 
 # Ustawiamy zmienną środowiskową dla portu
-ENV PORT=3002
+ENV PORT=3004
 
 # Uruchamiamy aplikację
 CMD ["node", "src/app.js"]

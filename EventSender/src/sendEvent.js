@@ -58,4 +58,15 @@ const paymentRequested = {
     }
 };
 
-sendEventToRabbitMQ(paymentFailedEvent);
+const ticketGenerated = {
+    eventName: 'TicketGenerated',
+    payload: {
+        ticket: {
+            ticketNumber: 'uisdf67965alk',
+            reservationId: '12346'
+        },
+        userEmail: 'john.doe2@gmail.com'
+    }
+};
+
+sendEventToRabbitMQ(paymentRequested);

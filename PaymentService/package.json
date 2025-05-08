@@ -13,7 +13,12 @@
   "dependencies": {
     "amqplib": "^0.10.7",
     "axios": "^1.9.0",
+    "express": "^5.1.0",
+    "module-alias": "^2.2.3",
     "moongose": "^1.0.0",
     "winston": "^3.17.0"
+  },
+  "_moduleAliases": {
+    "@shared": "shared"
   }
 }

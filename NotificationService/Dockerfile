@@ -14,9 +14,6 @@ COPY NotificationService/ ./
 # Kopiujemy katalog shared (WAŻNE: z odpowiednią ścieżką!)
 COPY shared ./shared
 
-# Rejestracja aliasów (upewnij się, że module-alias jest zainstalowany)
-RUN npm install module-alias
-
 ENV PORT=3005
 
 CMD ["node", "src/app.js"]

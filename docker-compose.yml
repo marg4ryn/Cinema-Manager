@@ -58,27 +58,29 @@ services:
   #   ports:
   #     - "3002:3002"
 
-  # payment-service:
-  #   build:
-  #     context: ./PaymentService
-  #   container_name: paymentService
-  #   depends_on:
-  #     - rabbitmq
-  #   environment:
-  #     RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-  #   ports:
-  #     - "3003:3003"
+  payment-service:
+    build:
+      context: .
+      dockerfile: PaymentService/Dockerfile
+    container_name: paymentService
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "3003:3003"
 
-  # ticket-service:
-  #   build:
-  #     context: ./TicketService
-  #   container_name: ticketService
-  #   depends_on:
-  #     - rabbitmq
-  #   environment:
-  #     RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-  #   ports:
-  #     - "3004:3004"
+  ticket-service:
+    build:
+      context: .
+      dockerfile: TicketService/Dockerfile
+    container_name: ticketService
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "3004:3004"
 
   notification-service:
     build:
