@@ -1,11 +1,14 @@
+const CommandHandler = require('@shared/cqrs/CommandHandler');
+const logger = require('@shared/logger/logger');
+
 const mongoose = require('mongoose');
 const MovieSession = require('../models/MovieSession');
 
 const movieTitles = ['Inception', 'The Matrix', 'Interstellar', 'The Dark Knight', 'Pulp Fiction'];
 const rooms = ['Room 1', 'Room 2', 'Room 3'];
 
-class MovieCommandHandler {
-    async seedMovieSessions() {
+class MovieCommandHandler extends CommandHandler {
+    async seedMovieSessions(command) {
         try {
             await MovieSession.deleteMany({});
 
@@ -28,9 +31,9 @@ class MovieCommandHandler {
             }
 
             await MovieSession.insertMany(sessions);
-            console.log('Movie sessions seeded successfully');
+            logger.info('Movie sessions seeded successfully');
         } catch (error) {
-            console.error('Error seeding movie sessions:', error);
+            logger.error('Error seeding movie sessions:', error);
         }
     }
 }

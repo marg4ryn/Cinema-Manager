@@ -2,12 +2,30 @@ const mongoose = require('mongoose');
 const Reservation = require('../models/Reservation');
 
 class ReservationCommandHandler {
-  constructor(eventPublisher, logger) {
-    this.eventPublisher = eventPublisher;
-    this.logger = logger;
+
+  async handle(command) {
+    const sessions = command.sessions;
+
+     sessions.forEach(session => {
+      logger.info(`Movie Title: ${session.movieTitle}`);
+      logger.info(`Start Time: ${session.startTime}`);
+      logger.info(`Duration: ${session.durationMinutes} minutes`);
+      logger.info('-------------------------');
+    });
+    logger.info('Please select session.');
+
+    //response
+
+    //wywolanie query handler
+
+    //response
+
+    //publish
+
+    //obsluga payment succeeded
   }
 
-  async selectSeat(sessionId, userEmail, seatNumber) {
+  async selectSeat(freeSeats) {
     try {
       const reservations = await Reservation.find({ sessionId }).lean();
       const reservedSeats = reservations.flatMap(r => r.seats);

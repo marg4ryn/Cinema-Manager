@@ -9,21 +9,21 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
 
-  # mongo-movie:
-  #   image: mongo:6
-  #   container_name: mongo_movie
-  #   ports:
-  #     - "27018:27017"
-  #   volumes:
-  #     - mongo_movie_data:/data/db
+  mongo-movie:
+    image: mongo:6
+    container_name: mongo_movie
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_movie_data:/data/db
 
-  # mongo-reservation:
-  #   image: mongo:6
-  #   container_name: mongo_reservation
-  #   ports:
-  #     - "27019:27017"
-  #   volumes:
-  #     - mongo_reservation_data:/data/db
+  mongo-reservation:
+    image: mongo:6
+    container_name: mongo_reservation
+    ports:
+      - "27019:27017"
+    volumes:
+      - mongo_reservation_data:/data/db
 
   event-sender:
     build:
@@ -36,27 +36,29 @@ services:
     ports:
       - "3000:3000"
 
-  # reservation-service:
-  #   build:
-  #     context: ./ReservationService
-  #   container_name: reservationservice
-  #   depends_on:
-  #     - rabbitmq
-  #   environment:
-  #     RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-  #   ports:
-  #     - "3001:3001"
+  reservation-service:
+    build:
+      context: .
+      dockerfile: ReservationService/Dockerfile
+    container_name: reservationservice
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "3001:3001"
 
-  # movie-service:
-  #   build:
-  #     context: ./MovieService
-  #   container_name: movieservice
-  #   depends_on:
-  #     - rabbitmq
-  #   environment:
-  #     RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-  #   ports:
-  #     - "3002:3002"
+  movie-service:
+    build:
+      context: .
+      dockerfile: MovieService/Dockerfile
+    container_name: movieservice
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "3002:3002"
 
   payment-service:
     build:
@@ -94,6 +96,6 @@ services:
     ports:
       - "3005:3005"
 
-# volumes:
-#   mongo_movie_data:
-#   mongo_reservation_data:
+volumes:
+  mongo_movie_data:
+  mongo_reservation_data:

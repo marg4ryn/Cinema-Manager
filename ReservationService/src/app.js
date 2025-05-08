@@ -1,21 +1,20 @@
-const amqp = require('amqplib');
+require('module-alias/register');
 const express = require('express');
-const EventPublisher = require('./infrastructure/messaging/EventPublisher');
-const EventListener = require('./infrastructure/messaging/EventListener');
-const ReservationQueryHandler = require('./domain/handlers/ReservationQueryHandler');
-const ReservationCommandHandler = require('./domain/handlers/ReservationCommandHandler');
-const logger = require('./infrastructure/logging/logger');
-const RESERVATION_EVENTS = require('./domain/events/ReservationEvents');
+const amqp = require('amqplib');
+const SessionsRequestedEvent = require('@shared/events/events/SessionsRequestedEvent');
+const SessionsSentListener = require('./infrastructure/SessionsSentListener');
+const PaymentSucceededListener = require('./infrastructure/PaymentSucceededListener');
+const Publisher = require('@shared/events/EventPublisher');
+const logger = require('@shared/logger/logger');
 const RABBITMQ_URL = 'amqp://guest:guest@rabbitmq:5672';
-
 const mongoose = require('mongoose');
-const MONGODB_URI = 'mongodb://mongo-movie:27019/reservationservice'
-
+const MONGODB_URI = 'mongodb://mongo-movie:27017/movieservice'
 
 const app = express();
 
 async function connectToMongoDB() {
     try {
+        mongoose.set('strictQuery', false);
         await mongoose.connect(MONGODB_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
@@ -41,22 +40,24 @@ async function connectToRabbitMQ() {
 
 async function startApp() {
     await connectToMongoDB();
+
     const { connection, channel } = await connectToRabbitMQ();
 
-    const sessionPublisher = new EventPublisher(channel, RESERVATION_EVENTS.SESSIONS_REQUESTED);
-    const paymentPublisher = new EventPublisher(channel, RESERVATION_EVENTS.PAYMENT_REQUESTED);
+    const publisher = new Publisher(channel, logger);
 
-    const commandHandler = new ReservationCommandHandler();
-    await commandHandler.seedMovieSessions();
+    const sessionsSentListener = new SessionsSentListener(channel, publisher);
+    await sessionsSentListener.listen();
 
-    const queryHandler = new ReservationQueryHandler(commandHandler, logger);
+    const paymentSucceededListener = new PaymentSucceededListener(channel, publisher);
+    await paymentSucceededListener.listen();
 
-    const sessionEventListener = new EventListener(channel, queryHandler, logger);
-    await sessionEventListener.startListening(RESERVATION_EVENTS.SESSIONS_SENT);
-    
     app.listen(3001, () => {
         logger.info('ReservationService is running on port 3001');
     });
+
+    const sessionsRequestedEvent = new SessionsRequestedEvent();
+    publisher.publish(sessionsRequestedEvent);
+    logger.info('Sessions data requested.')
 
     process.on('SIGINT', async () => {
         logger.info('Closing ReservationService...');

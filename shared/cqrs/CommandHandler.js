@@ -5,7 +5,7 @@ class CommandHandler {
       }
     }
   
-    async execute(command) {
+    async handle(command) {
       throw new Error('execute(command) must be implemented');
     }
   }

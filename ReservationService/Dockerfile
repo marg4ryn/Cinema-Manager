@@ -5,18 +5,18 @@ FROM node:16
 WORKDIR /app
 
 # Kopiujemy pliki package.json i package-lock.json
-COPY MovieService/package*.json ./
+COPY ReservationService/package*.json ./
 
 # Instalujemy zależności
 RUN npm install
 
 # Kopiujemy resztę plików źródłowych
-COPY MovieService/ ./
+COPY ReservationService/ ./
 
 COPY shared ./shared
 
 # Ustawiamy zmienną środowiskową dla portu
-ENV PORT=3002
+ENV PORT=3001
 
 # Uruchamiamy aplikację
 CMD ["node", "src/app.js"]

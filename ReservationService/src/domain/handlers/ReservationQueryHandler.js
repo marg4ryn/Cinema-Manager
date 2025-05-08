@@ -1,16 +1,18 @@
 const Reservation = require('../models/Reservation');
+const QueryHandler = require('@shared/cqrs/QueryHandler');
+const logger = require('@shared/logger/logger');
 
-class MovieQueryHandler {
-    constructor(commandHandler, logger) {
+class MovieQueryHandler extends QueryHandler {
+    constructor(commandHandler) {
         this.commandHandler = commandHandler;
-        this.logger = logger;
         this.availableSeatsBySession = {};
     }
 
-    async handle(event) {
+    async execute(query) {
         try {
-            const { sessionId, totalSeats } = event.payload;
-            this.logger.info(`Fetching reservations for sessionId: ${sessionId}`);
+            const sessionId = query.sessionId;
+            const totalSeats = query.totalSeats;
+            logger.info(`Fetching reservations for sessionId: ${sessionId}`);
 
             const reservations = await Reservation.find({ sessionId }).lean();
             const reservedSeats = reservations.flatMap(r => r.seats);
@@ -24,7 +26,7 @@ class MovieQueryHandler {
             this.logger.info(`Reserved seats: [${reservedSeats.join(', ')}]`);
             this.logger.info(`Available places: [${freeSeats.join(', ')}]`);
 
-            this.commandHandler.selectSeat();
+            this.commandHandler.selectSeat(freeSeats);
         } catch (error) {
             this.logger.error(`Error handling movie session fetch:`, error);
         }

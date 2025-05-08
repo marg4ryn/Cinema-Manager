@@ -69,4 +69,4 @@ const ticketGenerated = {
     }
 };
 
-sendEventToRabbitMQ(paymentRequested);
+sendEventToRabbitMQ(sessionsRequested);
