@@ -1,31 +1,28 @@
-# Cinema-Manager
-Cloud programming project.
+🎬 System Rezerwacji Miejsc w Kinie — Architektura Mikroserwisowa
+Projekt przedstawia kompletny system do rezerwacji miejsc w kinie, oparty na architekturze mikroserwisowej. Składa się z 5 niezależnych mikroserwisów, zbudowanych zgodnie z najlepszymi praktykami projektowymi.
 
-node src/infrastructure/messaging/EventSubscriber.js
+⚙️ Kluczowe założenia architektoniczne
+CQRS (Command Query Responsibility Segregation) – Każdy mikroserwis oddziela logikę zapisu (komendy) od logiki odczytu (zapytania), co zwiększa skalowalność i przejrzystość kodu.
 
-node src/server.js
+Clean Architecture – Struktura każdego mikroserwisu została zaprojektowana zgodnie z zasadami czystej architektury, co umożliwia łatwą modyfikację i testowanie kodu.
 
-POST http://localhost:3000/api/reservations
-Body:
-{
-  "userId": "123",
-  "movieId": "456",
-  "seats": ["A1", "A2"]
-}
+Event-Driven Architecture (EDA) – Komunikacja między mikroserwisami odbywa się asynchronicznie za pośrednictwem brokera wiadomości (np. Kafka, RabbitMQ), co zapewnia luźne powiązanie i odporność na błędy.
 
-docker-compose up -d
+Database per Service – Każdy mikroserwis posiada własną, niezależną bazę danych, co minimalizuje zależności między usługami.
 
-docker-compose up eventsender
+Observability & Logging – System loguje wszystkie istotne operacje i wywoływane metody przy użyciu wspólnego loggera, co wspiera monitorowanie i debugowanie.
 
-docker-compose down
+Docker – Dla każdego mikroserwisu został przygotowany osobny obraz Dockera, co ułatwia konteneryzację i wdrażanie.
 
-docker ps -a
+Terraform + AWS – Deployment mikroserwisów do chmury AWS jest w pełni zautomatyzowany z użyciem narzędzia Terraform.
 
-docker-compose up rabbitmq
+🧩 Mikroserwisy
+🎟️ Reservation Service – Zarządza rezerwacjami miejsc.
 
-npm install express winston amqplib uuid
+📽️ Movie Service – Przechowuje dane o seansach filmowych.
 
-eventName: 'CancelReservation',
-payload: {
-    reservationId: '12345'
-}
+💳 Payment Service – Obsługuje płatności za bilety.
+
+🎫 Ticket Service – Generuje bilety po zakończonej płatności.
+
+📩 Notification Service – Wysyła powiadomienia do użytkowników (e-mail/SMS).
