@@ -1,28 +1,28 @@
-🎬 System Rezerwacji Miejsc w Kinie — Architektura Mikroserwisowa
-Projekt przedstawia kompletny system do rezerwacji miejsc w kinie, oparty na architekturze mikroserwisowej. Składa się z 5 niezależnych mikroserwisów, zbudowanych zgodnie z najlepszymi praktykami projektowymi.
+## 🎬 Cinema Seat Reservation System
+The project presents a complete system for booking seats in a cinema, based on a microservice architecture. It consists of 5 independent microservices, built in accordance with the best design practices.
 
-⚙️ Kluczowe założenia architektoniczne
-CQRS (Command Query Responsibility Segregation) – Każdy mikroserwis oddziela logikę zapisu (komendy) od logiki odczytu (zapytania), co zwiększa skalowalność i przejrzystość kodu.
+### ⚙️ Key architectural assumptions
+- CQRS (Command Query Responsibility Segregation) - Each microservice separates the write logic (commands) from the read logic (queries), which increases the scalability and clarity of the code.
 
-Clean Architecture – Struktura każdego mikroserwisu została zaprojektowana zgodnie z zasadami czystej architektury, co umożliwia łatwą modyfikację i testowanie kodu.
+- Clean Architecture - The structure of each microservice has been designed in accordance with the principles of clean architecture, which allows for easy modification and testing of the code.
 
-Event-Driven Architecture (EDA) – Komunikacja między mikroserwisami odbywa się asynchronicznie za pośrednictwem brokera wiadomości (np. Kafka, RabbitMQ), co zapewnia luźne powiązanie i odporność na błędy.
+- Event-Driven Architecture (EDA) - Communication between microservices takes place asynchronously via a message broker (e.g. Kafka, RabbitMQ), which ensures loose coupling and fault tolerance.
 
-Database per Service – Każdy mikroserwis posiada własną, niezależną bazę danych, co minimalizuje zależności między usługami.
+- Database per Service – Each microservice has its own, independent database, which minimizes dependencies between services.
 
-Observability & Logging – System loguje wszystkie istotne operacje i wywoływane metody przy użyciu wspólnego loggera, co wspiera monitorowanie i debugowanie.
+- Observability & Logging – The system logs all important operations and invoked methods using a common logger, which supports monitoring and debugging.
 
-Docker – Dla każdego mikroserwisu został przygotowany osobny obraz Dockera, co ułatwia konteneryzację i wdrażanie.
+- Docker – A separate Docker image has been prepared for each microservice, which facilitates containerization and deployment.
 
-Terraform + AWS – Deployment mikroserwisów do chmury AWS jest w pełni zautomatyzowany z użyciem narzędzia Terraform.
+- Terraform + AWS – Deployment of microservices to the AWS cloud is fully automated using the Terraform tool.
 
-🧩 Mikroserwisy
-🎟️ Reservation Service – Zarządza rezerwacjami miejsc.
+### 🧩 Microservices
+- 🎟️ Reservation Service – Manages seat reservations.
 
-📽️ Movie Service – Przechowuje dane o seansach filmowych.
+- 📽️ Movie Service – Stores data on movie screenings.
 
-💳 Payment Service – Obsługuje płatności za bilety.
+- 💳 Payment Service – Handles ticket payments.
 
-🎫 Ticket Service – Generuje bilety po zakończonej płatności.
+- 🎫 Ticket Service – Generates tickets after payment is completed.
 
-📩 Notification Service – Wysyła powiadomienia do użytkowników (e-mail/SMS).
+- 📩 Notification Service – Sends notifications to users (e-mail/SMS).
