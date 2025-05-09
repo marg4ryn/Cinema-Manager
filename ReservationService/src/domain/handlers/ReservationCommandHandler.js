@@ -41,6 +41,13 @@ class ReservationCommandHandler extends CommandHandler{
 
       const response = await this.userResponseListener.waitForReservations();
       const selectedSeats = response;
+
+      const allSeatsAvailable = selectedSeats.every(seat => freeSeats.includes(seat));
+      if (!allSeatsAvailable) {
+        logger.error(`Reservation failed: Some selected seats [${selectedSeats.join(', ')}] are no longer available.`);
+        return;
+      }
+
       const reservationId = new mongoose.Types.ObjectId();
 
       const paymentRequestedEvent = new PaymentRequestedEvent(userEmail, reservationId, selectedSeats, sessionId);

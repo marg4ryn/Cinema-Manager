@@ -1,11 +1,10 @@
 const ReservationCommandHandler = require('../domain/handlers/ReservationCommandHandler');
 const ReservationQueryHandler = require('../domain/handlers/ReservationQueryHandler');
 const GetReservationsQuery = require('../domain/queries/GetReservationsQuery');
-const HttpUserResponseListener = require('../api/HttpUserResponseListener');
 const Publisher = require('@shared/events/EventPublisher');
 const sessionStore = require('../SessionStore');
 
-module.exports = (app, httpUserResponseListener) => {
+module.exports = (app, publisher, httpUserResponseListener) => {
   app.post('/select-session', async (req, res) => {
   const { answer } = req.body;
 
@@ -30,7 +29,7 @@ module.exports = (app, httpUserResponseListener) => {
 
     const totalSeats = selectedSession.totalSeats;
     const query = new GetReservationsQuery(sessionId, totalSeats, userEmail);
-    const queryHandler = new ReservationQueryHandler(new ReservationCommandHandler(new Publisher(), new HttpUserResponseListener()));
+    const queryHandler = new ReservationQueryHandler(new ReservationCommandHandler(publisher, httpUserResponseListener));
 
     await queryHandler.execute(query);
 

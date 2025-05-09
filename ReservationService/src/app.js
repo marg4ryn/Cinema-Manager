@@ -46,10 +46,9 @@ async function startApp() {
     const { connection, channel } = await connectToRabbitMQ();
 
     const listener = new HttpUserResponseListener();
-
-    require('./api/userResponse')(app, listener);
-
     const publisher = new Publisher(channel, logger);
+
+    require('./api/userResponse')(app, publisher, listener);
 
     const sessionsSentListener = new SessionsSentListener(channel, publisher, listener);
     await sessionsSentListener.listen();
