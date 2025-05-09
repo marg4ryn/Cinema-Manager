@@ -3,14 +3,16 @@ const express = require('express');
 const amqp = require('amqplib');
 const SessionsRequestedEvent = require('@shared/events/events/SessionsRequestedEvent');
 const SessionsSentListener = require('./infrastructure/SessionsSentListener');
+const HttpUserResponseListener = require('./api/HttpUserResponseListener');
 const PaymentSucceededListener = require('./infrastructure/PaymentSucceededListener');
 const Publisher = require('@shared/events/EventPublisher');
 const logger = require('@shared/logger/logger');
 const RABBITMQ_URL = 'amqp://guest:guest@rabbitmq:5672';
 const mongoose = require('mongoose');
-const MONGODB_URI = 'mongodb://mongo-movie:27017/movieservice'
+const MONGODB_URI = 'mongodb://mongo-reservation:27017/reservationservice'
 
 const app = express();
+app.use(express.json()); 
 
 async function connectToMongoDB() {
     try {
@@ -43,9 +45,13 @@ async function startApp() {
 
     const { connection, channel } = await connectToRabbitMQ();
 
+    const listener = new HttpUserResponseListener();
+
+    require('./api/userResponse')(app, listener);
+
     const publisher = new Publisher(channel, logger);
 
-    const sessionsSentListener = new SessionsSentListener(channel, publisher);
+    const sessionsSentListener = new SessionsSentListener(channel, publisher, listener);
     await sessionsSentListener.listen();
 
     const paymentSucceededListener = new PaymentSucceededListener(channel, publisher);

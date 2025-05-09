@@ -7,23 +7,25 @@ class HttpUserResponseListener extends UserResponseListener {
     this.emitter = new EventEmitter();
   }
 
-  registerResponse(userId, answer) {
-    this.emitter.emit(`response:${userId}`, answer);
+  async resetListeners() {
+    this.emitter.removeAllListeners();
   }
 
-  async waitForResponse(userId, timeoutMs = 30000) {
+  registerResponse(type, answer) {
+    this.emitter.emit(`response:${type}`, answer);
+  }
+
+  async waitForSession() {
+    await this.resetListeners();
     return new Promise((resolve) => {
-      const listener = (response) => {
-        resolve(response);
-        clearTimeout(timer);
-      };
+      this.emitter.once('response:session', resolve);
+    });
+  }
 
-      this.emitter.once(`response:${userId}`, listener);
-
-      const timer = setTimeout(() => {
-        this.emitter.removeListener(`response:${userId}`, listener);
-        resolve('timeout');
-      }, timeoutMs);
+  async waitForReservations() {
+    await this.resetListeners();
+    return new Promise((resolve) => {
+      this.emitter.once('response:seat', resolve);
     });
   }
 }

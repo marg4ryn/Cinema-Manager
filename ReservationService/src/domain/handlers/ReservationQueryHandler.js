@@ -1,9 +1,11 @@
 const Reservation = require('../models/Reservation');
 const QueryHandler = require('@shared/cqrs/QueryHandler');
 const logger = require('@shared/logger/logger');
+const ReservationsSentCommand = require('../commands/ReservationsSentCommand');
 
-class MovieQueryHandler extends QueryHandler {
+class ReservationQueryHandler extends QueryHandler {
     constructor(commandHandler) {
+        super();
         this.commandHandler = commandHandler;
         this.availableSeatsBySession = {};
     }
@@ -12,7 +14,9 @@ class MovieQueryHandler extends QueryHandler {
         try {
             const sessionId = query.sessionId;
             const totalSeats = query.totalSeats;
-            logger.info(`Fetching reservations for sessionId: ${sessionId}`);
+            const userEmail = query.userEmail;
+            logger.info(`Received query: ${JSON.stringify(query)}`);
+            logger.info(`Fetching reservations for sessionId: ${sessionId} for user: ${userEmail}`);
 
             const reservations = await Reservation.find({ sessionId }).lean();
             const reservedSeats = reservations.flatMap(r => r.seats);
@@ -21,16 +25,17 @@ class MovieQueryHandler extends QueryHandler {
 
             this.availableSeatsBySession[sessionId] = freeSeats;
 
-            this.logger.info(`Session: ${sessionId}`);
-            this.logger.info(`Total number of seats: ${totalSeats}`);
-            this.logger.info(`Reserved seats: [${reservedSeats.join(', ')}]`);
-            this.logger.info(`Available places: [${freeSeats.join(', ')}]`);
+            logger.info(`Session: ${sessionId}`);
+            logger.info(`Total number of seats: ${totalSeats}`);
+            logger.info(`Reserved seats: [${reservedSeats.join(', ')}]`);
+            logger.info(`Available places: [${freeSeats.join(', ')}]`);
 
-            this.commandHandler.selectSeat(freeSeats);
+            const reservationsSentCommand = new ReservationsSentCommand(sessionId, freeSeats, userEmail);
+            this.commandHandler.handle(reservationsSentCommand);
         } catch (error) {
-            this.logger.error(`Error handling movie session fetch:`, error);
+            logger.error(`Error handling movie session fetch:`, error);
         }
     }
 }
 
-module.exports = MovieQueryHandler;
+module.exports = ReservationQueryHandler;

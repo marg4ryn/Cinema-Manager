@@ -22,7 +22,9 @@ class PaymentRequestedListener extends BaseListener {
         if (event.eventName === coreEvent.eventName) {
           const command = new PaymentRequestedCommand(
             event.payload.userEmail,
-            event.payload.reservationId
+            event.payload.reservationId,
+            event.payload.selectedPlaces,
+            event.payload.sessionId
           );
           await this.handler.handle(command, this.publisher, this.userResponseListener);
         }

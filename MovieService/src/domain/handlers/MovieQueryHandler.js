@@ -10,7 +10,6 @@ class MovieQueryHandler extends QueryHandler {
             logger.info(`Fetching all movie sessions from MongoDB`);
 
             const sessions = await MovieSession.find({}).lean();
-
             const sessionsSentEvent = new SessionsSentEvent(sessions);
             publisher.publish(sessionsSentEvent)
 

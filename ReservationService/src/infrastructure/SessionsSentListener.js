@@ -6,7 +6,7 @@ const logger = require('@shared/logger/logger');
 
 class SessionsSentListener extends BaseListener {
   constructor(channel, publisher, userResponseListener) {
-    const handler = new ReservationCommandHandler();
+    const handler = new ReservationCommandHandler(publisher, userResponseListener);
     super(channel, handler, logger, coreEvent);
     this.publisher = publisher;
     this.userResponseListener = userResponseListener;
@@ -19,11 +19,11 @@ class SessionsSentListener extends BaseListener {
       if (msg !== null) {
         const event = JSON.parse(msg.content.toString());
         logger.info(`Received event: ${event.eventName}`)
+        this.channel.ack(msg);
         if (event.eventName === coreEvent.eventName) {
           const command = new SessionsSentCommand(event.payload.sessions);
-          await this.handler.handle(command, this.publisher, this.userResponseListener);
+          await this.handler.handle(command);
         }
-        this.channel.ack(msg);
       }
     });
   }

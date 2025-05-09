@@ -1,67 +1,77 @@
 const mongoose = require('mongoose');
 const Reservation = require('../models/Reservation');
+const CommandHandler = require('@shared/cqrs/CommandHandler');
+const PaymentRequestedEvent = require('@shared/events/events/PaymentRequestedEvent');
+const SessionsSentCommand = require('../commands/SessionsSentCommand');
+const ReservationsSentCommand = require('../commands/ReservationsSentCommand');
+const PaymentSucceededCommand = require('../commands/PaymentSucceededCommand');
+const SessionStore = require('../../SessionStore');
+const logger = require('@shared/logger/logger')
 
-class ReservationCommandHandler {
+class ReservationCommandHandler extends CommandHandler{
+  constructor(publisher, userResponseListener) {
+    super();
+    this.publisher = publisher;
+    this.userResponseListener = userResponseListener;
+  }
 
   async handle(command) {
-    const sessions = command.sessions;
+    if (command instanceof SessionsSentCommand) {
+      const sessions = command.sessions;
+      SessionStore.setSessions(command.sessions);
 
-     sessions.forEach(session => {
-      logger.info(`Movie Title: ${session.movieTitle}`);
-      logger.info(`Start Time: ${session.startTime}`);
-      logger.info(`Duration: ${session.durationMinutes} minutes`);
-      logger.info('-------------------------');
-    });
-    logger.info('Please select session.');
+      sessions.forEach(session => {
+        logger.info(`Session ID: ${session._id}`);
+        logger.info(`Movie Title: ${session.movieTitle}`);
+        logger.info(`Start Time: ${session.startTime}`);
+        logger.info(`Duration: ${session.durationMinutes} minutes`);
+        logger.info(`Total seats: ${session.totalSeats}`);
+        logger.info('-------------------------');
+      });
 
-    //response
+      logger.info('Please select a session by providing the session ID and your email.');
+    }
 
-    //wywolanie query handler
+    else if (command instanceof ReservationsSentCommand) {
+      const { sessionId, freeSeats, userEmail } = command;
 
-    //response
+      logger.info(`Received reservation for session: ${sessionId}`);
+      logger.info(`User: ${userEmail}`);
+      logger.info(`Available seats: ${freeSeats.join(', ')}`);
 
-    //publish
+      const response = await this.userResponseListener.waitForReservations();
+      const selectedSeats = response;
+      const reservationId = new mongoose.Types.ObjectId();
 
-    //obsluga payment succeeded
-  }
+      const paymentRequestedEvent = new PaymentRequestedEvent(userEmail, reservationId, selectedSeats, sessionId);
+      this.publisher.publish(paymentRequestedEvent)
+    }
 
-  async selectSeat(freeSeats) {
-    try {
-      const reservations = await Reservation.find({ sessionId }).lean();
-      const reservedSeats = reservations.flatMap(r => r.seats);
+    else if (command instanceof PaymentSucceededCommand) {
+      const {userEmail, reservationId, selectedPlaces, sessionId} = command;
 
-      if (reservedSeats.includes(seatNumber)) {
-        this.logger.warn(`Seat ${seatNumber} is already reserved.`);
-        return;
+      if (!Array.isArray(selectedPlaces)) {
+          logger.error('selectedPlaces is not a valid array');
+          return;
       }
 
-      await this.eventPublisher.publish({
-        eventName: 'PaymentRequested',
-        payload: {
-          sessionId,
-          userEmail,
-          seatNumber
-        }
-      });
-
-      this.logger.info(`Event PAYMENT_REQUESTED sent for seat ${seatNumber}, session ${sessionId}`);
-    } catch (error) {
-      this.logger.error('Error while selecting location:', error);
-    }
-  }
-
-  async confirmReservation(sessionId, userEmail, seatNumber) {
-    try {
       const reservation = new Reservation({
-        sessionId,
+        _id: reservationId,
+        sessionId: sessionId,
         userEmail: userEmail,
-        seats: [seatNumber]
+        seats: selectedPlaces
       });
 
-      await reservation.save();
-      this.logger.info(`Saved reservation: seat ${seatNumber}, session ${sessionId}`);
-    } catch (error) {
-      this.logger.error('Error while saving reservation:', error);
+      try {
+        await reservation.save();
+        logger.info(`Reservation saved successfully for session ${sessionId}, seats: ${selectedPlaces.join(', ')}`);
+      } catch (error) {
+        logger.error('Failed to save reservation:', error);
+      }
+    }
+
+    else {
+      logger.error('Unknown command type');
     }
   }
 }

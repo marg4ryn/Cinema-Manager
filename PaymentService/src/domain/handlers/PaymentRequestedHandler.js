@@ -10,6 +10,8 @@ class PaymentRequestedHandler extends CommandHandler {
 
         const userEmail  = command.userEmail;
         const reservationId = command.reservationId;
+        const selectedPlaces = command.selectedPlaces;
+        const sessionId = command.sessionId;
 
         logger.info(`Processing payment for user: ${userEmail}`);
 
@@ -18,9 +20,9 @@ class PaymentRequestedHandler extends CommandHandler {
         if (response === 'yes') {
             const ticketRequestedEvent = new TicketRequestedEvent(userEmail);
             publisher.publish(ticketRequestedEvent)
-            logger.info(`Ticket requested for user ${userEmail}.`);
+            logger.info(`Ticket requested for user ${userEmail}`);
 
-            const paymentSucceededEvent = new PaymentSucceededEvent(userEmail, reservationId);
+            const paymentSucceededEvent = new PaymentSucceededEvent(userEmail, reservationId, selectedPlaces, sessionId);
             publisher.publish(paymentSucceededEvent)
             logger.info(`Payment for user ${userEmail} has been approved.`);
         } else if (response === 'timeout') {

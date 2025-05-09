@@ -14,12 +14,12 @@ class MovieCommandHandler extends CommandHandler {
 
             const sessions = [];
 
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 3; i++) {
                 const title = movieTitles[i % movieTitles.length];
                 const room = rooms[i % rooms.length];
                 const startTime = new Date(Date.now() + i * 3600 * 1000); 
                 const duration = 120 + (i % 3) * 15;
-                const totalSeats = 50 + (i % 5) * 10;
+                const totalSeats = 5 + (i % 5);
 
                 sessions.push({
                     movieTitle: title,
