@@ -25,16 +25,16 @@ services:
     volumes:
       - mongo_reservation_data:/data/db
 
-  event-sender:
-    build:
-      context: ./EventSender
-    container_name: eventsender
-    depends_on:
-      - rabbitmq
-    environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-    ports:
-      - "3000:3000"
+  # event-sender:
+  #   build:
+  #     context: ./EventSender
+  #   container_name: eventsender
+  #   depends_on:
+  #     - rabbitmq
+  #   environment:
+  #     RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+  #   ports:
+  #     - "3000:3000"
 
   reservation-service:
     build:
