@@ -18,8 +18,8 @@ async function connectToRabbitMQ() {
         logger.info('Connected to RabbitMQ successfully');
         return { connection, channel };
     } catch (error) {
-        logger.error('Failed to connect to RabbitMQ:', error);
-        process.exit(1);
+        logger.error('RabbitMQ connection failed. Retrying in 5s...', error);
+        setTimeout(connectToRabbitMQ, 5000);
     }
 }
 

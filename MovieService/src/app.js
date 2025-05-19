@@ -12,6 +12,7 @@ const MONGODB_URI = process.env.MONGO_URL || 'mongodb://localhost:27017/movieser
 
 const app = express();
 
+
 async function connectToMongoDB() {
     try {
         mongoose.set('strictQuery', false);
@@ -21,8 +22,8 @@ async function connectToMongoDB() {
         });
         logger.info('Connected to MongoDB successfully');
     } catch (error) {
-        logger.error('Failed to connect to MongoDB:', error);
-        process.exit(1);
+        logger.error('MongoDB connection failed. Retrying in 5s...', error);
+        setTimeout(connectToMongoDB, 5000);
     }
 }
 
@@ -33,8 +34,8 @@ async function connectToRabbitMQ() {
         logger.info('Connected to RabbitMQ successfully');
         return { connection, channel };
     } catch (error) {
-        logger.error('Failed to connect to RabbitMQ:', error);
-        process.exit(1);
+        logger.error('RabbitMQ connection failed. Retrying in 5s...', error);
+        setTimeout(connectToRabbitMQ, 5000);
     }
 }
 
