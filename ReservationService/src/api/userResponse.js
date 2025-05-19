@@ -3,6 +3,7 @@ const ReservationQueryHandler = require('../domain/handlers/ReservationQueryHand
 const GetReservationsQuery = require('../domain/queries/GetReservationsQuery');
 const Publisher = require('@shared/events/EventPublisher');
 const sessionStore = require('../SessionStore');
+const logger = require('@shared/logger/logger');
 
 module.exports = (app, publisher, httpUserResponseListener) => {
   app.post('/select-session', async (req, res) => {
