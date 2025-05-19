@@ -6,7 +6,7 @@ const PaymentRequestedListener = require('./infrastructure/PaymentRequestedListe
 const HttpUserResponseListener = require('./api/HttpUserResponseListener');
 const Publisher = require('@shared/events/EventPublisher');
 const logger = require('@shared/logger/logger');
-const RABBITMQ_URL = 'amqp://guest:guest@rabbitmq:5672';
+const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672';
 
 const app = express();
 app.use(bodyParser.json());
