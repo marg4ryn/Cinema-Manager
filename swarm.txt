@@ -1,0 +1,11 @@
+cd /opt/microservices_app
+sudo /usr/local/bin/docker-compose up -d --no-recreate --scale payment-service=3
+sudo /usr/local/bin/docker-compose ps
+sudo /usr/local/bin/docker-compose down -v
+
+
+sudo docker swarm init
+sudo docker stack deploy -c docker-compose.yml microservices_stack
+sudo docker service scale microservices_stack_payment-service=3
+sudo docker service ls
+sudo docker stack rm microservices_stack
